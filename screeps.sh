@@ -8,6 +8,6 @@ case $1 in
         sudo docker-compose exec screeps screeps-launcher cli
         ;;
     *)
-        sudo docker-compose $1
+        sudo docker-compose "$@"
         ;;
 esac

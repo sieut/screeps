@@ -1,6 +1,7 @@
 # steamKey should be set up in .env
 # zsh has an option to always source .env, but it might not work on other shells
 
+steamKeyFile: .steamKey
 mods: # Recommended mods
 - screepsmod-auth
 - screepsmod-admin-utils
