@@ -25,6 +25,14 @@ services:
       - redis-data:/data
     restart: unless-stopped
 
+  dev:
+    image: node:12-buster
+    working_dir: /code
+    volumes:
+      - .:/code
+    entrypoint: npm run entrypoint
+
+
 volumes:
   redis-data:
   mongo-data:
