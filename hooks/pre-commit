@@ -1,0 +1,20 @@
+#!/bin/bash
+
+handle_output () {
+    if [[ $? = 0 ]]; then
+        printf '\u2705\n'
+    else
+        printf '\u274C\n'
+        exit 1
+    fi
+}
+
+printf '\tRunning lint...'
+./screeps.sh lint -it
+handle_output
+
+printf '\tRunning unit tests...'
+./screeps.sh test -it
+handle_output
+
+exit 0

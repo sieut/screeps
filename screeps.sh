@@ -7,8 +7,11 @@ case $1 in
     cli)
         sudo docker-compose exec screeps screeps-launcher cli
         ;;
+    lint)
+        sudo docker-compose exec $2 dev npm run lint
+        ;;
     test)
-        sudo docker-compose exec dev npm run test
+        sudo docker-compose exec $2 dev npm run test
         ;;
     *)
         sudo docker-compose "$@"
