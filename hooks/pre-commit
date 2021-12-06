@@ -9,6 +9,8 @@ handle_output () {
     fi
 }
 
+echo ""
+
 printf '\tRunning lint...'
 ./screeps.sh lint -it
 handle_output
@@ -16,5 +18,7 @@ handle_output
 printf '\tRunning unit tests...'
 ./screeps.sh test -it
 handle_output
+
+echo ""
 
 exit 0
