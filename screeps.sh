@@ -10,6 +10,9 @@ case $1 in
     lint)
         sudo docker-compose exec $2 dev npm run lint
         ;;
+    prettier)
+        sudo docker-compose exec $2 dev npm run prettier
+        ;;
     test)
         sudo docker-compose exec $2 dev npm run test
         ;;

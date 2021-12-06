@@ -1,24 +1,36 @@
 #!/bin/bash
 
+EXIT=0
+
 handle_output () {
     if [[ $? = 0 ]]; then
         printf '\u2705\n'
     else
         printf '\u274C\n'
-        exit 1
+        EXIT=1
     fi
 }
 
 echo ""
 
+printf '\tRunning prettier...'
+./screeps.sh prettier -T >/dev/null 2>&1
+handle_output
+# Still exit 0 because files are overwritten
+EXIT=0
+
 printf '\tRunning lint...'
-./screeps.sh lint -it
+./screeps.sh lint -T >/dev/null 2>&1
 handle_output
 
 printf '\tRunning unit tests...'
-./screeps.sh test -it
+./screeps.sh test -T >/dev/null 2>&1
 handle_output
 
 echo ""
 
-exit 0
+if [[ $EXIT != 0 ]]; then
+    echo "Pre-commit fails, please check the tests"
+fi
+
+exit $EXIT
