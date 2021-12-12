@@ -23,9 +23,9 @@ printf '\tRunning lint...'
 ./screeps.sh lint -T >/dev/null 2>&1
 handle_output
 
-printf '\tRunning unit tests...'
-./screeps.sh test -T >/dev/null 2>&1
-handle_output
+# printf '\tRunning unit tests...'
+# ./screeps.sh test -T >/dev/null 2>&1
+# handle_output
 
 echo ""
 
