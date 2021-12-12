@@ -158,31 +158,6 @@ export class DistributorScheduler extends Scheduler {
         });
     }
 
-    public run(): boolean {
-        const spawningsLength = this.spawnings.length;
-        this.spawnings = _.filter(this.spawnings, creepName => {
-            if (!Game.creeps[creepName]) {
-                return true;
-            }
-            const creep = Game.creeps[creepName];
-            this.workers[creep.name] = new Distributor(creep, {});
-            (this.workers[creep.name] as Distributor).targets = this.targets;
-            return false;
-        });
-
-        // TODO recalculate targets by referring to BuilderScheduler
-        for (const creepName in this.workers) {
-            if (!Memory.creeps[creepName]) {
-                delete this.workers[creepName];
-                continue;
-            }
-
-            this.workers[creepName].run();
-        }
-
-        return this.spawnings.length !== spawningsLength;
-    }
-
     public initializeScheduler(opts: { [opt: string]: any }): void {}
 
     public set proto(proto: DistributorSchedulerProto) {
@@ -228,6 +203,11 @@ export class DistributorScheduler extends Scheduler {
                 (w as Distributor).toJSON()
             ),
         };
+    }
+
+    protected assignWorker(creep: Creep): void {
+        this.workers[creep.name] = new Distributor(creep, {});
+        (this.workers[creep.name] as Distributor).targets = this.targets;
     }
 }
 

@@ -17,18 +17,42 @@ export abstract class Scheduler {
     }
 
     public abstract initializeScheduler(opts: { [opt: string]: any }): void;
+    public abstract spawn(): CreepSpecs;
     public abstract set proto(proto: any);
+    public abstract toJSON(): any;
+    protected abstract assignWorker(creep: Creep): void;
+
     /** Logic that is run every tick
      *   Returns true if memory should be updated
      **/
-    public abstract run(): boolean;
-    public abstract spawn(): CreepSpecs;
+    public run(): boolean {
+        const spawningsCount = this.spawnings.length;
+        this.spawnings = _.filter(this.spawnings, creepName => {
+            if (!Game.creeps[creepName]) {
+                return true;
+            }
+            const creep = Game.creeps[creepName];
+            this.assignWorker(creep);
+            return false;
+        });
+
+        const workersCount = _.keys(this.workers).length;
+        for (const creepName in this.workers) {
+            if (!Memory.creeps[creepName]) {
+                delete this.workers[creepName];
+                continue;
+            }
+
+            this.workers[creepName].run();
+        }
+
+        return this.spawnings.length !== spawningsCount ||
+            _.keys(this.workers).length !== workersCount;
+    }
 
     public spawning(specs: CreepSpecs): void {
         this.spawnings.push(specs.name);
     }
-
-    public abstract toJSON(): any;
 
     public get numWorkers(): number {
         return _.keys(this.workers).length + this.spawnings.length;

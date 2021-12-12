@@ -85,30 +85,6 @@ export class MinerScheduler extends Scheduler {
         this.targets = [];
     }
 
-    public run(): boolean {
-        const spawningsLength = this.spawnings.length;
-        this.spawnings = _.filter(this.spawnings, creepName => {
-            if (!Game.creeps[creepName]) {
-                return true;
-            }
-            const creep = Game.creeps[creepName];
-            const work = this.assignWork(creep)!;
-            this.workers[creep.name] = new Miner(creep, work);
-            return false;
-        });
-
-        for (const creepName in this.workers) {
-            if (!Memory.creeps[creepName]) {
-                delete this.workers[creepName];
-                continue;
-            }
-
-            this.workers[creepName].run();
-        }
-
-        return this.spawnings.length !== spawningsLength;
-    }
-
     public initializeScheduler(opts: { [opt: string]: any }): void {
         if (!opts.roomName) {
             throw new Error(
@@ -169,6 +145,11 @@ export class MinerScheduler extends Scheduler {
             workers: _.map(_.values(this.workers), w => (w as Miner).toJSON()),
             targets: _.map(this.targets, t => t.id),
         };
+    }
+
+    protected assignWorker(creep: Creep): void {
+        const work = this.assignWork(creep)!;
+        this.workers[creep.name] = new Miner(creep, work);
     }
 
     private assignWork(_creep: Creep): MinerWork | null {
