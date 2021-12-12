@@ -5,12 +5,17 @@ import {
 } from "scheduler/DistributorScheduler";
 import { MinerScheduler, MinerSchedulerProto } from "scheduler/MinerScheduler";
 import { Scheduler } from "scheduler/Scheduler";
+import {
+    UpgraderScheduler,
+    UpgraderSchedulerProto,
+} from "scheduler/UpgraderScheduler";
 
 export class Colony {
     public room: Room | null;
     public schedulers: {
         minerScheduler: MinerScheduler;
         distributorScheduler: DistributorScheduler;
+        upgraderScheduler: UpgraderScheduler;
     };
 
     constructor(roomName: string) {
@@ -18,6 +23,7 @@ export class Colony {
         this.schedulers = {
             minerScheduler: new MinerScheduler(this),
             distributorScheduler: new DistributorScheduler(this),
+            upgraderScheduler: new UpgraderScheduler(this),
         };
     }
 
@@ -27,6 +33,7 @@ export class Colony {
             roomName: this.room!.name,
         });
         this.schedulers.distributorScheduler.initializeScheduler({});
+        this.schedulers.upgraderScheduler.initializeScheduler({});
     }
 
     public set proto(proto: ColonyProto) {
@@ -34,11 +41,14 @@ export class Colony {
         minerScheduler.proto = proto.schedulers.minerScheduler;
         const distributorScheduler = new DistributorScheduler(this);
         distributorScheduler.proto = proto.schedulers.distributorScheduler;
+        const upgraderScheduler = new UpgraderScheduler(this);
+        upgraderScheduler.proto = proto.schedulers.upgraderScheduler;
 
         this.room = Game.rooms[proto.room];
         this.schedulers = {
             minerScheduler,
             distributorScheduler,
+            upgraderScheduler,
         };
     }
 
@@ -67,6 +77,7 @@ export class Colony {
                 minerScheduler: this.schedulers.minerScheduler.toJSON(),
                 distributorScheduler:
                     this.schedulers.distributorScheduler.toJSON(),
+                upgraderScheduler: this.schedulers.upgraderScheduler.toJSON(),
             },
         };
     }
@@ -80,6 +91,11 @@ export class Colony {
         const miner = this.schedulers.minerScheduler.spawn();
         if (!miner.isEmpty()) {
             this.spawn(miner, this.schedulers.minerScheduler);
+            return;
+        }
+        const upgrader = this.schedulers.upgraderScheduler.spawn();
+        if (!upgrader.isEmpty()) {
+            this.spawn(upgrader, this.schedulers.upgraderScheduler);
             return;
         }
     }
@@ -109,5 +125,6 @@ export interface ColonyProto {
     schedulers: {
         minerScheduler: MinerSchedulerProto;
         distributorScheduler: DistributorSchedulerProto;
+        upgraderScheduler: UpgraderSchedulerProto;
     };
 }

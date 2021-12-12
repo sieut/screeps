@@ -46,8 +46,10 @@ export abstract class Scheduler {
             this.workers[creepName].run();
         }
 
-        return this.spawnings.length !== spawningsCount ||
-            _.keys(this.workers).length !== workersCount;
+        return (
+            this.spawnings.length !== spawningsCount ||
+            _.keys(this.workers).length !== workersCount
+        );
     }
 
     public spawning(specs: CreepSpecs): void {

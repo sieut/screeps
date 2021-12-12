@@ -62,20 +62,29 @@ function init(): void {
     }
     global.colonies = {};
 
-    for (const room in Memory.colonies) {
-        const proto = Memory.colonies[room];
-        const colony = new Colony(room);
+    for (const roomName in Memory.colonies) {
+        const room = Game.rooms[roomName];
+        if (!room || !room.controller?.my) {
+            delete Memory.colonies[roomName];
+            continue;
+        }
+
+        const proto = Memory.colonies[roomName];
+        const colony = new Colony(roomName);
         colony.proto = proto;
 
-        global.colonies[room] = colony;
+        global.colonies[roomName] = colony;
     }
-    // For the very first spawn, we have to set the first colony
-    // if (_.keys(Game.rooms).length === 1) {
-    //     const room = _.keys(Game.rooms)[0];
-    //     global.colonies[room] = new Colony(room);
-    //     global.colonies[room].initializeColony();
-    //     Memory.colonies[room] = global.colonies[room].toJSON();
-    // }
+
+    const rooms: Room[] = _.values(Game.rooms);
+    for (const room of rooms) {
+        if (!global.colonies[room.name] && room.controller?.my) {
+            const colony = new Colony(room.name);
+            colony.initializeColony();
+            global.colonies[room.name] = colony;
+            Memory.colonies[room.name] = colony.toJSON();
+        }
+    }
 
     INIT = true;
 }

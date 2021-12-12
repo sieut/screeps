@@ -112,7 +112,7 @@ export class Distributor extends Worker {
     }
 
     private getOrCalcPickup(): Pickup | null {
-        if (!this.pickup) {
+        if (!this.pickup || !Game.getObjectById(this.pickup.id)) {
             const room = this.creep.room;
             if (room.storage) {
                 this.pickup = room.storage;
