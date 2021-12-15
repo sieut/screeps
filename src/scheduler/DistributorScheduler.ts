@@ -87,14 +87,14 @@ export class Distributor extends Worker {
                     const store =
                         this.creep.store.getUsedCapacity(RESOURCE_ENERGY) -
                         amount;
-                    if (store < 50 || this.targets.length === 0) {
+                    const targets = _.filter(
+                        this.targets,
+                        t => t.id !== target!.id
+                    );
+                    if (store < 50 || targets.length === 0) {
                         this.pickingUp = true;
                         target = this.getOrCalcPickup();
                     } else {
-                        const targets = _.filter(
-                            this.targets,
-                            t => t.id !== target!.id
-                        );
                         target = this.getOrCalcNext(targets);
                     }
                 }

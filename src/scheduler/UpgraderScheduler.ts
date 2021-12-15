@@ -99,7 +99,7 @@ export class UpgraderScheduler extends Scheduler {
                 } is at level 0, maybe it's not owned`
             );
         } else if (rcl < 3) {
-            const desired = rcl;
+            const desired = rcl * 2;
             if (this.numWorkers < desired) {
                 return new CreepSpecs(
                     EARLY_UPGR_PARTS,
