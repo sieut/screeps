@@ -7,8 +7,6 @@ mods: # Recommended mods
 - screepsmod-admin-utils
 - screepsmod-mongo  # You must install and start `mongodb` and `redis` before this mod will work
 serverConfig: # This section requires screepsmod-admin-utils to work
-  welcomeText:  |
-    <h1 style="text-align: center;">Screeps Dev Server</h1>
   constants: # Used to override screeps constants
     TEST_CONSTANT: 123
   tickRate: 1000

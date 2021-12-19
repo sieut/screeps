@@ -1,5 +1,6 @@
 import { Colony } from "Colony";
 import { CreepSpecs } from "creep/CreepSpecs";
+import { Pickup } from "utils/Structure";
 
 export abstract class Scheduler {
     protected colony: Colony;
@@ -16,6 +17,7 @@ export abstract class Scheduler {
         return this.workers[name];
     }
 
+    /** Logic that initializes the scheduler for new colonies **/
     public abstract initializeScheduler(opts: { [opt: string]: any }): void;
     public abstract spawn(): CreepSpecs;
     public abstract set proto(proto: any);
@@ -64,10 +66,12 @@ export abstract class Scheduler {
 export abstract class Worker {
     public creepName: string;
     public work: Work;
+    public colony: Colony;
 
-    constructor(creep: Creep, work: Work) {
+    constructor(creep: Creep, work: Work, colony: Colony) {
         this.creepName = creep.name;
         this.work = work;
+        this.colony = colony;
     }
 
     public get creep(): Creep {
@@ -81,6 +85,18 @@ export abstract class Worker {
             name: this.creepName,
             work: this.work,
         };
+    }
+
+    protected pickupResource(target: Pickup): void {
+        if (this.creep.pos.inRangeTo(target, 1)) {
+            if (target instanceof Resource) {
+                this.creep.pickup(target);
+            } else {
+                this.creep.withdraw(target, RESOURCE_ENERGY);
+            }
+        } else {
+            this.creep.moveTo(target);
+        }
     }
 }
 

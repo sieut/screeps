@@ -10,8 +10,8 @@ const EARLY_MINER_PARTS = [WORK, WORK, MOVE];
 export class Miner extends Worker {
     private dropContainer: StructureContainer | null;
 
-    constructor(creep: Creep, work: MinerWork) {
-        super(creep, work);
+    constructor(creep: Creep, work: MinerWork, colony: Colony) {
+        super(creep, work, colony);
         this.dropContainer = Miner.lookForContainer(this.target);
     }
 
@@ -104,7 +104,11 @@ export class MinerScheduler extends Scheduler {
             proto.workers,
             (acc: { [id: string]: Worker }, p: WorkerProto) => {
                 const creep = Game.creeps[p.name]!;
-                acc[p.name] = new Miner(creep, p.work as MinerWork);
+                acc[p.name] = new Miner(
+                    creep,
+                    p.work as MinerWork,
+                    this.colony
+                );
                 return acc;
             },
             {}
@@ -114,29 +118,27 @@ export class MinerScheduler extends Scheduler {
 
     public spawn(): CreepSpecs {
         const minerByTargetId = this.getMinerByTargetId();
-        const rcl = this.colony.rcl;
-
-        if (rcl === 0) {
-            throw Error(
-                `Room ${
-                    this.colony.room!.name
-                } is at level 0, maybe it's not owned`
-            );
-        } else if (rcl < 3) {
-            const needMiners = !!_.find(
-                this.targets,
-                target =>
-                    target instanceof Source && !minerByTargetId[target.id]
-            );
-            return needMiners
-                ? new CreepSpecs(
-                      EARLY_MINER_PARTS,
-                      `${MINER_PREFIX}-${Game.time}`,
-                      {}
-                  )
-                : CreepSpecs.empty();
-        } else {
-            return CreepSpecs.empty();
+        switch (this.colony.rcl) {
+            case 0:
+                throw Error(
+                    `Room ${
+                        this.colony.room!.name
+                    } is at level 0, maybe it's not owned`
+                );
+            default: {
+                const needMiners = !!_.find(
+                    this.targets,
+                    target =>
+                        target instanceof Source && !minerByTargetId[target.id]
+                );
+                return needMiners
+                    ? new CreepSpecs(
+                          EARLY_MINER_PARTS,
+                          `${MINER_PREFIX}-${Game.time}`,
+                          {}
+                      )
+                    : CreepSpecs.empty();
+            }
         }
     }
 
@@ -149,7 +151,7 @@ export class MinerScheduler extends Scheduler {
 
     protected assignWorker(creep: Creep): void {
         const work = this.assignWork(creep)!;
-        this.workers[creep.name] = new Miner(creep, work);
+        this.workers[creep.name] = new Miner(creep, work, this.colony);
     }
 
     private assignWork(_creep: Creep): MinerWork | null {

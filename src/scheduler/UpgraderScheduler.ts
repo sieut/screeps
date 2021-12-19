@@ -1,21 +1,17 @@
+import { Colony } from "Colony";
 import { CreepSpecs } from "creep/CreepSpecs";
+import { Pickup } from "utils/Structure";
 import { Scheduler, Work, Worker, WorkerProto } from "./Scheduler";
 
 const UPGR_PREFIX = "MLfJ";
 const EARLY_UPGR_PARTS = [WORK, CARRY, MOVE];
 
-type Pickup =
-    | StructureContainer
-    | StructureStorage
-    | StructureTerminal
-    | Resource;
-
 export class Upgrader extends Worker {
     public pickup: Pickup | null;
     private pickingUp: boolean;
 
-    constructor(creep: Creep, work: Work) {
-        super(creep, work);
+    constructor(creep: Creep, work: Work, colony: Colony) {
+        super(creep, work, colony);
         this.pickup = null;
         this.pickingUp = true;
     }
@@ -37,16 +33,7 @@ export class Upgrader extends Worker {
             if (!target) {
                 return;
             }
-
-            if (this.creep.pos.inRangeTo(target, 1)) {
-                if (target instanceof Resource) {
-                    this.creep.pickup(target);
-                } else {
-                    this.creep.withdraw(target, RESOURCE_ENERGY);
-                }
-            } else {
-                this.creep.moveTo(target);
-            }
+            this.pickupResource(target);
         } else {
             const target = this.creep.room.controller!;
             const upgrade = this.creep.upgradeController(target);
@@ -58,17 +45,7 @@ export class Upgrader extends Worker {
 
     private getOrCalcPickup(): Pickup | null {
         if (!this.pickup || !Game.getObjectById(this.pickup.id)) {
-            const room = this.creep.room;
-            if (room.storage) {
-                this.pickup = room.storage;
-            }
-            // For lower rcl
-            const dropped: Resource[] = room.find(FIND_DROPPED_RESOURCES, {
-                filter: { resourceType: RESOURCE_ENERGY },
-            });
-            if (dropped.length > 0) {
-                this.pickup = dropped[_.random(0, dropped.length - 1)];
-            }
+            this.pickup = this.colony.sourcePickup;
         }
 
         return this.pickup;
@@ -83,7 +60,7 @@ export class UpgraderScheduler extends Scheduler {
             proto.workers,
             (acc: { [id: string]: Worker }, p: WorkerProto) => {
                 const creep = Game.creeps[p.name]!;
-                acc[p.name] = new Upgrader(creep, p.work);
+                acc[p.name] = new Upgrader(creep, p.work, this.colony);
                 return acc;
             },
             {}
@@ -91,25 +68,25 @@ export class UpgraderScheduler extends Scheduler {
     }
 
     public spawn(): CreepSpecs {
-        const rcl = this.colony.rcl;
-        if (rcl === 0) {
-            throw Error(
-                `Room ${
-                    this.colony.room!.name
-                } is at level 0, maybe it's not owned`
-            );
-        } else if (rcl < 3) {
-            const desired = rcl * 2;
-            if (this.numWorkers < desired) {
-                return new CreepSpecs(
-                    EARLY_UPGR_PARTS,
-                    `${UPGR_PREFIX}-${Game.time}`,
-                    {}
+        switch (this.colony.rcl) {
+            case 0:
+                throw Error(
+                    `Room ${
+                        this.colony.room!.name
+                    } is at level 0, maybe it's not owned`
                 );
+            default: {
+                if (this.numWorkers < 3) {
+                    return new CreepSpecs(
+                        EARLY_UPGR_PARTS,
+                        `${UPGR_PREFIX}-${Game.time}`,
+                        {}
+                    );
+                } else {
+                    return CreepSpecs.empty();
+                }
             }
         }
-
-        return CreepSpecs.empty();
     }
 
     public toJSON(): UpgraderSchedulerProto {
@@ -121,7 +98,7 @@ export class UpgraderScheduler extends Scheduler {
     }
 
     protected assignWorker(creep: Creep): void {
-        this.workers[creep.name] = new Upgrader(creep, {});
+        this.workers[creep.name] = new Upgrader(creep, {}, this.colony);
     }
 }
 

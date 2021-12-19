@@ -29,8 +29,8 @@ export class Distributor extends Worker {
     public targets: Target[];
     private next: Target | null;
 
-    constructor(creep: Creep, work: Work) {
-        super(creep, work);
+    constructor(creep: Creep, work: Work, colony: Colony) {
+        super(creep, work, colony);
         this.pickup = null;
         this.pickingUp = true;
         this.targets = [];
@@ -165,7 +165,7 @@ export class DistributorScheduler extends Scheduler {
             proto.workers,
             (acc: { [id: string]: Worker }, p: WorkerProto) => {
                 const creep = Game.creeps[p.name]!;
-                acc[p.name] = new Distributor(creep, p.work);
+                acc[p.name] = new Distributor(creep, p.work, this.colony);
                 (acc[p.name] as Distributor).targets = this.targets;
                 return acc;
             },
@@ -174,26 +174,24 @@ export class DistributorScheduler extends Scheduler {
     }
 
     public spawn(): CreepSpecs {
-        const rcl = this.colony.rcl;
-
-        if (rcl === 0) {
-            throw Error(
-                `Room ${
-                    this.colony.room!.name
-                } is at level 0, maybe it's not owned`
-            );
-        } else if (rcl < 3) {
-            if (this.numWorkers < 1) {
-                return new CreepSpecs(
-                    EARLY_DIST_PARTS,
-                    `${DIST_PREFIX}-${Game.time}`,
-                    {}
+        switch (this.colony.rcl) {
+            case 0:
+                throw Error(
+                    `Room ${
+                        this.colony.room!.name
+                    } is at level 0, maybe it's not owned`
                 );
-            } else {
-                return CreepSpecs.empty();
+            default: {
+                if (this.numWorkers < 1) {
+                    return new CreepSpecs(
+                        EARLY_DIST_PARTS,
+                        `${DIST_PREFIX}-${Game.time}`,
+                        {}
+                    );
+                } else {
+                    return CreepSpecs.empty();
+                }
             }
-        } else {
-            return CreepSpecs.empty();
         }
     }
 
@@ -206,7 +204,7 @@ export class DistributorScheduler extends Scheduler {
     }
 
     protected assignWorker(creep: Creep): void {
-        this.workers[creep.name] = new Distributor(creep, {});
+        this.workers[creep.name] = new Distributor(creep, {}, this.colony);
         (this.workers[creep.name] as Distributor).targets = this.targets;
     }
 }
