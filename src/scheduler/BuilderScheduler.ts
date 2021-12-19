@@ -127,7 +127,9 @@ export class BuilderScheduler extends Scheduler {
 
     public toJSON(): BuilderSchedulerProto {
         return {
-            workers: [],
+            workers: _.map(_.values(this.workers), w =>
+                (w as Builder).toJSON()
+            ),
         };
     }
 
